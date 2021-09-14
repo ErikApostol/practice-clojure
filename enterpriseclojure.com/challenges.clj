@@ -14,7 +14,7 @@
 )
 
 ; Challenge 1 Part 3
-(defn accept_map [{:keys [state corgi-count policy-count]}]
+(defn accept-map [{:keys [state corgi-count policy-count]}]
     (if (contains? #{"IL", "WA", "NY", "CO"} state)
         (cond (>= corgi-count 7) :platinum
               (and (>= corgi-count 3) (>= policy-count 1)) :platinum
@@ -38,6 +38,20 @@
         false
     )
 )
+
+; Challenge 2 Part 1
+(defn read-file []
+    (let [dataframe-str (-> (slurp "corgi-cover-applications.csv")
+                            (clojure.string/split #"\n")
+                            (->> (map #(clojure.string/split % #",") ) )
+                        )
+          body (for [row (rest dataframe-str)] (conj (subvec row 0 2) (Integer/parseInt (row 2)) (Integer/parseInt (row 3)) ) )
+          header [:name :state :corgi-count :policy-count] 
+         ]
+        (for [row body] (zipmap header row) )
+    )
+)
+
 
 ; 6.6 Exercises
 (defn fibonacci [n]
