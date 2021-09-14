@@ -41,7 +41,7 @@
 
 ; 6.6 Exercises
 (defn fibonacci [n]
-  (->>  (iterate (fn [v] [(v 1) (reduce + v)]) [0 1]) 
+  (->>  (iterate (fn [[a b]] [b (+ a b)]) [0 1]) 
         (take n) 
         (last)
         (first)
