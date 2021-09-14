@@ -38,3 +38,19 @@
         false
     )
 )
+
+; 6.6 Exercises
+(defn fibonacci [n]
+  (->>  (iterate (fn [v] [(v 1) (reduce + v)]) [0 1]) 
+        (take n) 
+        (last)
+        (first)
+  )
+)
+(defn factorial [n]
+  (->>  (iterate (fn [[k fac-k]] [(inc k) (* fac-k (inc k))]) [1 1] )
+        (take n)
+        (last)
+        (last)
+  )
+)
