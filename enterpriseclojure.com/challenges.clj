@@ -73,6 +73,34 @@
 )
 (create-files)
 
+; Challenge 2 Part 3
+(defn ineligibility-reason [{:keys [state corgi-count]}]  
+    (cond (not (pos? corgi-count)) "The applicant has no corgis."
+          (not (contains? #{"IL", "WA", "NY", "CO"} state)) "The applicant does not live in IL, WA, NY, or CO."
+          :else nil
+    )
+)
+(defn create-files []
+    (let [application-data (read-file)
+          names-of-applicants (for [application application-data] (:name application))
+          ineligibility (map ineligibility-reason application-data)
+         ]
+        (with-open [f-eligible   (clojure.java.io/writer   "eligible-corgi-cover-applications.csv")
+                    f-ineligible (clojure.java.io/writer "ineligible-corgi-cover-applications.csv")
+                   ]
+            (.write f-eligible   (str "Name,Reason" \newline))
+            (.write f-ineligible (str "Name,Reason" \newline))
+            (dotimes [i (count application-data)] 
+                (if (nth ineligibility i) (.write f-ineligible (str (nth names-of-applicants i) ",\"" (nth ineligibility i) \" \newline))
+                                          (.write f-eligible   (str (nth names-of-applicants i) "," \newline))
+                                          
+                )
+            )
+        )
+    )
+)
+(create-files)
+
 
 ; 6.6 Exercises
 (defn fibonacci [n]
