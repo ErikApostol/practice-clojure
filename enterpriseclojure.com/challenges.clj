@@ -40,6 +40,7 @@
 )
 
 ; Challenge 2 Part 1
+(defn eligibility-check [{:keys [state corgi-count]}] (and (pos? corgi-count) (contains? #{"IL", "WA", "NY", "CO"} state) ) )
 (defn read-file []
     (let [dataframe-str (-> (slurp "corgi-cover-applications.csv")
                             (clojure.string/split #"\n")
@@ -51,6 +52,26 @@
         (for [row body] (zipmap header row) )
     )
 )
+(map eligibility-check (read-file))
+
+; Challenge 2 Part 2
+(defn create-files []
+    (let [application-data (read-file)
+          names-of-applicants (for [application application-data] (:name application))
+          eligibility (map eligibility-check application-data)
+         ]
+        (with-open [f-eligible   (clojure.java.io/writer   "eligible-corgi-cover-applications.csv")
+                    f-ineligible (clojure.java.io/writer "ineligible-corgi-cover-applications.csv")
+                   ]
+            (dotimes [i (count application-data)] 
+                (if (nth eligibility i) (.write f-eligible   (str (nth names-of-applicants i) \newline))
+                                        (.write f-ineligible (str (nth names-of-applicants i) \newline))
+                )
+            )
+        )
+    )
+)
+(create-files)
 
 
 ; 6.6 Exercises
