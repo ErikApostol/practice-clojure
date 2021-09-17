@@ -40,16 +40,26 @@
 )
 
 ; Challenge 2 Part 1
-(defn eligibility-check [{:keys [state corgi-count]}] (and (pos? corgi-count) (contains? #{"IL", "WA", "NY", "CO"} state) ) )
+(require '[clojure.java.io :as io])
+(require '[clojure.data.csv :as csv])
+(def four-states #{"IL", "WA", "NY", "CO"})
+(def in-file "corgi-cover-applications.csv")
+(def in-header-vec [:name :state :corgi-count :policy-count])
+(defn convert-value-to-int [record-map ky] (update record-map ky #(Integer/parseInt %) ) )
+
+(defn eligibility-check [{:keys [state corgi-count]}] 
+    (and (pos? corgi-count) (contains? four-states state) ) 
+)
+
 (defn read-file []
-    (let [dataframe-str (-> (slurp "corgi-cover-applications.csv")
-                            (clojure.string/split #"\n")
-                            (->> (map #(clojure.string/split % #",") ) )
-                        )
-          body (for [row (rest dataframe-str)] (conj (subvec row 0 2) (Integer/parseInt (row 2)) (Integer/parseInt (row 3)) ) )
-          header [:name :state :corgi-count :policy-count] 
-         ]
-        (for [row body] (zipmap header row) )
+    (with-open [reader (io/reader in-file)]
+        (->>
+            (csv/read-csv reader)
+            rest
+            (mapv zipmap (repeat in-header-vec))
+            (mapv #(convert-value-to-int % :corgi-count) )
+            (mapv #(convert-value-to-int % :policy-count) )
+        )
     )
 )
 (map eligibility-check (read-file))
