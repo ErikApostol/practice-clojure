@@ -116,6 +116,27 @@
 )
 (create-files)
 
+; Challenge 2 Part 4
+(require '[clojure.data.json :as json])
+(defn write-to-json-files []
+    (let [application-list-map (read-file)
+          result-list-map (for [application-map application-list-map] 
+                               (-> (assoc application-map :reason (eligibility-reason application-map))
+                                   (dissoc :state :corgi-count :policy-count) 
+                               )
+                          )
+          result-list-map-eligible   (remove #(:reason %) result-list-map)
+          result-list-map-ineligible (filter #(:reason %) result-list-map)
+         ]
+        (with-open [writer-eligible   (io/writer   "eligible-corgi-cover-applications.json")
+                    writer-ineligible (io/writer "ineligible-corgi-cover-applications.json")]
+            (json/write result-list-map-eligible   writer-eligible)
+            (json/write result-list-map-ineligible writer-ineligible)
+        )
+    )
+) 
+(write-to-json-files)
+
 
 ; 6.6 Exercises
 (defn fibonacci [n]
