@@ -66,18 +66,21 @@
 
 ; Challenge 2 Part 2
 (defn create-files []
-    (let [application-data (read-file)
-          names-of-applicants (for [application application-data] (:name application))
-          eligibility (map eligibility-check application-data)
+    (let [application-list-map (read-file)
+          result-list-map (for [application-map application-list-map] 
+                               (-> (assoc application-map :eligibility (eligibility-check application-map))
+                                   (dissoc :state :corgi-count :policy-count) 
+                               )
+                          )
+          result-list-map-eligible   (filter #(:eligibility %) result-list-map)
+          result-list-map-ineligible (remove #(:eligibility %) result-list-map)
          ]
-        (with-open [f-eligible   (clojure.java.io/writer   "eligible-corgi-cover-applications.csv")
-                    f-ineligible (clojure.java.io/writer "ineligible-corgi-cover-applications.csv")
-                   ]
-            (dotimes [i (count application-data)] 
-                (if (nth eligibility i) (.write f-eligible   (str (nth names-of-applicants i) \newline))
-                                        (.write f-ineligible (str (nth names-of-applicants i) \newline))
-                )
-            )
+        (with-open [writer-eligible   (io/writer   "eligible-corgi-cover-applications.csv")
+                    writer-ineligible (io/writer "ineligible-corgi-cover-applications.csv")]
+            (csv/write-csv writer-eligible [["Name" "Eligibility"]] ) ; header
+            (csv/write-csv writer-eligible (map vals result-list-map-eligible) )
+            (csv/write-csv writer-ineligible [["Name" "Eligibility"]] ) ; header
+            (csv/write-csv writer-ineligible (map vals result-list-map-ineligible) )
         )
     )
 )
