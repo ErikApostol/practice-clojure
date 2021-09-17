@@ -87,30 +87,32 @@
 (create-files)
 
 ; Challenge 2 Part 3
-(defn ineligibility-reason [{:keys [state corgi-count]}]  
-    (cond (not (pos? corgi-count)) "The applicant has no corgis."
+(defn eligibility-reason [{:keys [state corgi-count]}]  
+    (cond (not (or (pos? corgi-count) (contains? #{"IL", "WA", "NY", "CO"} state)))
+              "The applicant has no corgis, and does not live in IL, WA, NY, or CO."
+          (not (pos? corgi-count)) "The applicant has no corgis."
           (not (contains? #{"IL", "WA", "NY", "CO"} state)) "The applicant does not live in IL, WA, NY, or CO."
-          :else nil
-    )
+          :else nil 
+    )   
 )
 (defn create-files []
-    (let [application-data (read-file)
-          names-of-applicants (for [application application-data] (:name application))
-          ineligibility (map ineligibility-reason application-data)
+    (let [application-list-map (read-file)
+          result-list-map (for [application-map application-list-map] 
+                               (-> (assoc application-map :reason (eligibility-reason application-map))
+                                   (dissoc :state :corgi-count :policy-count) 
+                               )
+                          )
+          result-list-map-eligible   (remove #(:reason %) result-list-map)
+          result-list-map-ineligible (filter #(:reason %) result-list-map)
          ]
-        (with-open [f-eligible   (clojure.java.io/writer   "eligible-corgi-cover-applications.csv")
-                    f-ineligible (clojure.java.io/writer "ineligible-corgi-cover-applications.csv")
-                   ]
-            (.write f-eligible   (str "Name,Reason" \newline))
-            (.write f-ineligible (str "Name,Reason" \newline))
-            (dotimes [i (count application-data)] 
-                (if (nth ineligibility i) (.write f-ineligible (str (nth names-of-applicants i) ",\"" (nth ineligibility i) \" \newline))
-                                          (.write f-eligible   (str (nth names-of-applicants i) "," \newline))
-                                          
-                )
-            )
-        )
-    )
+        (with-open [writer-eligible   (io/writer   "eligible-corgi-cover-applications.csv")
+                    writer-ineligible (io/writer "ineligible-corgi-cover-applications.csv")]
+            (csv/write-csv writer-eligible [["Name" "Reason"]] ) ; header
+            (csv/write-csv writer-eligible (map vals result-list-map-eligible) )
+            (csv/write-csv writer-ineligible [["Name" "Reason"]] ) ; header
+            (csv/write-csv writer-ineligible (map vals result-list-map-ineligible) )
+        )   
+    )   
 )
 (create-files)
 
